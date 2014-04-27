@@ -7,51 +7,76 @@ var rl = readline.createInterface({
 	output: process.stdout
 });
 
-var high = 100;
-var low = 1;
-var guess = function guessNumber(answer, item, call_me, tries){
+var guess = function guessNumber(answer, call_me, state){
       process.stdout.write("You guess --> " + answer + "\n");
-	  var middle = Math.floor((low + high)/2);
-
-	   if(answer == item){
+	  var middle = Math.floor((state.low + state.high)/2);
+	  var item = state.solution[state.answered];
+		if(answer == item) {
             process.stdout.write("\nCongratsss! you guess correctly!!\n");
-			process.exit();
+			state.answered++;
+            state.high = 100;
+            state.low= 0;
+			if(state.answered == state.solution.length){
+				process.exit();
+			}
 			return;
         }
-	  if(middle != item && low < high){
-		if(item < middle){
-			 high = middle - 1;
-		}else if(item > middle){
-			low = middle + 1;
-		}	
-		middle = Math.floor((low + high) / 2);
-		if(answer < low || answer > high)
-			process.stdout.write('cold!');
-		else	
-			process.stdout.write('warm!');
-	  }
-      if(((high - low == 2) && (answer== low || answer ==  high)) || tries == 10)
+		if(middle != item && state.low < state.high){
+			if(item < middle){
+				 state.high = middle - 1;
+			}else if(item > middle){
+				state.low = middle + 1;
+			}	
+			middle = Math.floor((state.low + state.high) / 2);
+			item = state.solution[state.answered];
+
+			if(answer < state.low || answer > state.high)
+				process.stdout.write('cold!');
+			else	
+				process.stdout.write('warm!');
+	  	}//end of if
+      if(((state.high - state.low == 2) && (answer== state.low || answer ==  state.high)) || state.tries[state.answered] == 10)
 	  {
-            process.stdout.write("You lost! :( "+ tries + " tries\n");
-            process.stdout.write("The number was " +(high - 1) + "\n");
+            process.stdout.write("You lost! :( "+ state.tries[state.answered] + " tries\n");
+            process.stdout.write("The number was " +(item) + "\n");
+			state.answered++;
+			state.high = 100;
+			state.low= 0;
+			 if(state.answered == state.solutions.length){
+                process.exit();
+            }
 			return;
-            process.exit();
       }
-	  
-	  process.stdout.write('(The number is between ' +low + "-" + high + "-try #" + tries + ")" + "\nEnter again: ");
-	  call_me(tries + 1);
+	 //Increment tries   
+     if(state.tries.length == 0){
+              state.tries.push(0);
+        }
+        state.tries[state.answered]++;
+ 
+	  process.stdout.write('(The number is between ' +state.low + "-" + state.high + "-try #" + state.tries.length + ")" + "\nEnter again: ");
+	  call_me.apply(state, null); 
 }
 
 fs.readFile('file.txt', 'utf8', function read(err, data){
+	var state = {
+		'high' : 100,
+		'low' : 0, 
+		'tries' : [], 
+		'answered' : 0,
+		'questions': [],
+		'solution': []
+		
+	}
 	if(err){
 		return;
 	}
-	var call_me = function (c) {
+	var call_me = function () {
+		var info = this;
 		rl.question("Guess the first number:  ", function (answer) {
-				guess(answer, items[0], call_me, c);
+				guess(answer, call_me, info);
 		});
 	};
 	var content = data.trim();
-	var items = content.split(",");
-    call_me(1);
+	state.solution = content.split(",");
+	call_me.apply(state, null); 
 });

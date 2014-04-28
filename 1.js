@@ -12,12 +12,15 @@ var guess = function guessNumber(answer, call_me, state){
 	  var middle = Math.floor((state.low + state.high)/2);
 	  var item = state.solution[state.answered];
 		if(answer == item) {
-            process.stdout.write("\nCongratsss! you guess correctly!!\n");
+            process.stdout.write("Congratsss! you guess correctly!!\n\n");
 			state.answered++;
+			state.tries[state.answered]=0;
             state.high = 100;
             state.low= 0;
 			if(state.answered == state.solution.length){
 				process.exit();
+			}else{
+				 call_me.apply(state, null);
 			}
 			return;
         }
@@ -40,21 +43,23 @@ var guess = function guessNumber(answer, call_me, state){
             process.stdout.write("You lost! :( "+ state.tries[state.answered] + " tries\n");
             process.stdout.write("The number was " +(item) + "\n");
 			state.answered++;
+			state.tries[state.answered]=0;
 			state.high = 100;
 			state.low= 0;
-			 if(state.answered == state.solutions.length){
+			 if(state.answered == state.solution.length){
                 process.exit();
-            }
+            }else{
+				 call_me.apply(state, null);
+			}
 			return;
       }
-	 //Increment tries   
-     if(state.tries.length == 0){
-              state.tries.push(0);
-        }
+		//Increment tries   
+     
+		state.tries.push(0);
         state.tries[state.answered]++;
  
-	  process.stdout.write('(The number is between ' +state.low + "-" + state.high + "-try #" + state.tries.length + ")" + "\nEnter again: ");
-	  call_me.apply(state, null); 
+		process.stdout.write('(The number is between ' +state.low + "-" + state.high + "-try #" + state.tries[state.answered] + ")" + "\nEnter again: ");
+		call_me.apply(state, null); 
 }
 
 fs.readFile('file.txt', 'utf8', function read(err, data){
@@ -72,7 +77,7 @@ fs.readFile('file.txt', 'utf8', function read(err, data){
 	}
 	var call_me = function () {
 		var info = this;
-		rl.question("Guess the first number:  ", function (answer) {
+		rl.question("Guess the number:  ", function (answer) {
 				guess(answer, call_me, info);
 		});
 	};
